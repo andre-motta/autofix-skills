@@ -44,6 +44,10 @@ Known failure patterns from this repo's history. Update this file when fixing bu
 - **Likely cause**: The sandbox image has `uv` but not `pytest` or `tox`, and the agent reported the tool missing without running it through `uv`. The sandbox `AGENTS.md` ("do not install replacements") and "No hallucinated dependencies" made it think fetching the tool was forbidden. PyPI is allowlisted, so `uv run --with pytest python3 -m pytest`, `uvx tox` or the repo's own bootstrap (for example `make venv`) should work. The implement prompt now requires that attempt, and the review agent's finding tells the next pass to use `uv`. A `Missing toolchain:` observation for a Python tool must include a failed `Tried: <uv command>`; if it does not, the prompt was ignored. If the `uv` attempt itself failed, check the OpenShell network policy in agentic-ci.
 - **Where to look**: verdict `observations` for `Missing toolchain:` and `Tried:`, `prompts/implement-agent.md` Step 5 "Missing toolchain", `prompts/review-agent.md` Step 2
 
+### Go fix ends `blocked` at the implementation cap with "Go toolchain is not available in the sandbox"
+- **Likely cause**: The Codex sandbox image does not ship Go. After PR #68 a missing toolchain for changed files became a critical finding, so every Go ticket used all three implement passes and ended `blocked` (first seen on OSAC-5372). The prompts now treat a missing Go toolchain as a known image gap: the implement agent reports `null` with a `Missing toolchain (image gap):` observation and a `risks` entry, and the reviewer accepts it after a compiler-style read of the changed Go files. Remove this exception once the sandbox image ships Go.
+- **Where to look**: verdict `observations` for `Missing toolchain (image gap):`, `prompts/implement-agent.md` Step 5 "Known image gap: Go", `prompts/review-agent.md` Step 2
+
 ### Agent ignores unrelated CI failures
 - **Likely cause**: Before PR #24, agents would try to fix CI failures unrelated to their change. Now the prompt instructs agents to ignore pre-existing failures.
 - **Where to look**: `prompts/` implement and review prompts, CI failure handling instructions

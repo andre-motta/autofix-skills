@@ -78,7 +78,15 @@ A tool that is installed but cannot execute is also a missing toolchain: exit co
 2. Set the affected field to `null`, not `false`, because the check did not run.
 3. Add one observation per missing tool, in this format: `Missing toolchain: <documented step> not run: <tool> not installed or not executable (<error line>). Tried: <uv command> (<error line>). Ran instead: <command> (passed).` Omit `Tried:` only for a tool that is not a Python package.
 
-The review agent raises a finding for a missing tool that builds, lints or tests any changed file. Report the gap honestly. Do not hide it and do not relabel it.
+**Known image gap: Go.** The sandbox image does not ship a Go toolchain yet. Until it does, a missing `go` binary, and Go-based tools that need it (for example `gofmt`, `golangci-lint`, `controller-gen`, or `make` targets that call `go`), is a known image gap, not a blocker. Check with `command -v go` first. If Go is installed, run the documented steps as usual. If it is missing:
+
+1. Set the affected fields to `null` and start the observation with `Missing toolchain (image gap):` instead of `Missing toolchain:`.
+2. Add a `risks` entry saying that the Go build, lint and tests did not run in the sandbox and rely on the PR's CI.
+3. Keep Go changes small. Check by reading that every import is used, every identifier exists, and every call matches its signature.
+
+Do not use this exception for any other tool.
+
+The review agent raises a finding for a missing tool that builds, lints or tests any changed file, except for the known Go image gap. Report the gap honestly. Do not hide it and do not relabel it.
 
 ## Step 6: Commit
 
